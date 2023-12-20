@@ -64,6 +64,16 @@ model = alexnet_model()
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 history = model.fit(train_data, validation_data=val_data, epochs=10)
 
+def generate_confusion_matrix(data, model):
+    true_labels = []
+    predictions = []
+    for x, y in data:
+        true_labels.extend(y.numpy())
+        preds = model.predict(x)
+        predictions.extend(np.argmax(preds, axis=1))
+    conf_matrix = confusion_matrix(true_labels, predictions)
+    return conf_matrix
+
 train_conf_matrix = generate_confusion_matrix(train_data, model)
 val_conf_matrix = generate_confusion_matrix(val_data, model)
 plot_training_history(history)
