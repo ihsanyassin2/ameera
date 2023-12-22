@@ -19,7 +19,7 @@ from sklearn.metrics import confusion_matrix
 import itertools
 
 # Placeholder for the dataset path
-dataset_path = 'C:\\Users\\ihsan\\Downloads\\batik_dataset'
+dataset_path = 'E:\\Ameera\\Spectrogram\\CNN 600 data\\AlexNet\\NonFiltered\\Dot\\Fz\\128'
 
 # Load and preprocess data
 train_datagen = ImageDataGenerator(
@@ -38,7 +38,7 @@ train_generator = train_datagen.flow_from_directory(
 validation_generator = train_datagen.flow_from_directory(
     dataset_path,
     target_size=(224, 224),
-    batch_size=32,
+    batch_size=128,
     class_mode='categorical',
     subset='validation'  # set as validation data
 )
@@ -60,13 +60,13 @@ x = Dense(3, activation='softmax')(x)  # Assuming 3 categories
 model = Model(inputs=base_model.input, outputs=x)
 
 # Compile the model
-model.compile(optimizer=Adam(), loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the model
 history = model.fit(
     train_generator,
     validation_data=validation_generator,
-    epochs=10
+    epochs=500
 )
 
 # Function to plot confusion matrix
@@ -94,13 +94,20 @@ def plot_confusion_matrix(cm, classes, title, normalize=False, cmap=plt.cm.Blues
 # Generate confusion matrices
 # Predictions for training set
 train_predictions = model.predict(train_generator)
-train_cm = confusion_matrix(train_generator.classes, np.argmax(train_predictions, axis=1))
+validation_predictions = model.predict(validation_generator)
+
+# Convert probabilities to class indices
+train_pred_classes = np.argmax(train_predictions, axis=1)
+validation_pred_classes = np.argmax(validation_predictions, axis=1)
+
+# Generate confusion matrices
+train_cm = confusion_matrix(train_generator.classes, train_pred_classes)
+validation_cm = confusion_matrix(validation_generator.classes, validation_pred_classes)
+
+train_cm = confusion_matrix(train_generator.classes, train_pred_classes)
 plt.figure(figsize=(10, 10))
 plot_confusion_matrix(train_cm, train_generator.class_indices.keys(), title='Confusion Matrix - Training Set')
-
-# Predictions for validation set
-validation_predictions = model.predict(validation_generator)
-validation_cm = confusion_matrix(validation_generator.classes, np.argmax(validation_predictions, axis=1))
+validation_cm = confusion_matrix(validation_generator.classes, validation_pred_classes)
 plt.figure(figsize=(10, 10))
 plot_confusion_matrix(validation_cm, validation_generator.class_indices.keys(), title='Confusion Matrix - Validation Set')
 
@@ -123,5 +130,6 @@ plt.xlabel('Epoch')
 plt.legend(['Train', 'Validation'], loc='upper left')
 
 plt.show()
+
 
 
